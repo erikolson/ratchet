@@ -1,0 +1,3 @@
+# The verdict stream is local execution exhaust, not committed substrate
+# (ADR-0005). Probe patches under probes/ ARE committed.
+verdicts.jsonl

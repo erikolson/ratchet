@@ -1,0 +1,8 @@
+version: 0
+capabilities:
+  - name: vet
+    run: "go vet ./..."
+    verdict: exit
+  - name: test
+    run: "go test ./..."
+    verdict: exit
