@@ -55,14 +55,21 @@ type ProbeRecord struct {
 
 // Verdict is one normalized adjudication.
 type Verdict struct {
-	// Identity components (ADR-0001).
-	Capability string `json:"capability"`
+	// Identity components (ADR-0001). Capability and Oracle are absent on a gate
+	// verdict, which is a decision about a whole check run, not one capability.
+	Capability string `json:"capability,omitempty"`
 	Subject    string `json:"subject"`
-	Oracle     string `json:"oracle"`
+	Oracle     string `json:"oracle,omitempty"`
 	Kind       Kind   `json:"kind"`
 
-	// Outcome.
-	Status Status `json:"status"`
+	// Outcome (check/calibration). Absent on a gate verdict.
+	Status Status `json:"status,omitempty"`
+
+	// Gate decision (kind=gate only). A gate verdict references the check
+	// verdicts it acted on by identity (ADR-0005 / Q4); it never re-embeds them.
+	Decision string   `json:"decision,omitempty"` // "block" | "allow"
+	Action   string   `json:"action,omitempty"`   // what was gated, e.g. "git commit"
+	Refs     []string `json:"refs,omitempty"`     // referenced verdict identities
 
 	// Provenance — human-readable, never load-bearing.
 	Head  string `json:"head,omitempty"`
@@ -86,6 +93,22 @@ type Verdict struct {
 // delimiters — the encoding is unambiguous.
 func (v Verdict) Identity() string {
 	return fmt.Sprintf("%s@%s@tree:%s@oracle:%s", v.Capability, v.Kind, v.Subject, v.Oracle)
+}
+
+// GateVerdict builds a kind=gate verdict recording a block/allow decision over a
+// check run, referencing that run's verdicts by identity (ADR-0005 / Q4).
+func GateVerdict(subject, head string, dirty bool, decision, action string, refs []string, durationMs int64, timestamp string) Verdict {
+	return Verdict{
+		Subject:    subject,
+		Kind:       KindGate,
+		Decision:   decision,
+		Action:     action,
+		Refs:       refs,
+		Head:       head,
+		Dirty:      dirty,
+		DurationMs: durationMs,
+		Timestamp:  timestamp,
+	}
 }
 
 // Marshal renders a verdict as a single-line JSON object, normalizing nil

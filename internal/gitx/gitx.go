@@ -39,6 +39,20 @@ func RepoRoot(dir string) (string, error) {
 	return run(dir, nil, "rev-parse", "--show-toplevel")
 }
 
+// ShowFile returns the raw bytes of path at ref (e.g. "origin/main:ratchet.yaml"),
+// used to read the ratified manifest on the base branch (ADR-0008).
+func ShowFile(root, ref, path string) ([]byte, error) {
+	cmd := exec.Command("git", "show", ref+":"+path)
+	cmd.Dir = root
+	var out, errBuf strings.Builder
+	cmd.Stdout = &out
+	cmd.Stderr = &errBuf
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("git show %s:%s: %w: %s", ref, path, err, strings.TrimSpace(errBuf.String()))
+	}
+	return []byte(out.String()), nil
+}
+
 // Head returns the HEAD commit hash, or "" on an unborn branch (no commits yet).
 func Head(root string) (string, error) {
 	h, err := run(root, nil, "rev-parse", "--verify", "HEAD")
