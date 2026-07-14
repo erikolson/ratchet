@@ -1,5 +1,7 @@
 # ratchet
 
+[![CI](https://github.com/erikolson/ratchet/actions/workflows/ci.yml/badge.svg)](https://github.com/erikolson/ratchet/actions/workflows/ci.yml)
+
 **Certainty in change.** A single Go binary that makes "verified" a *fact* rather
 than a *claim* — in any repo, in any language.
 

@@ -1,0 +1,80 @@
+# CI for ratchet — two tiers: the build gate, and the tamper gate.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# HONESTY NOTE — read before trusting this workflow (this is §7.1 / ADR-0008).
+#
+# This workflow is the GENERATOR, not the locus. It runs the checks and, on a PR,
+# surfaces oracle weakenings — but a green or red result here prevents NOTHING on
+# its own. The enforcement locus is the org-provisioned setting a repo cannot
+# ship: branch protection. Enable it separately:
+#
+#   • Require the `build` status check to pass before merging
+#       → binds "the code verifies" (the real gate).
+#   • Require a pull-request review before merging
+#       → a human ratifies any oracle change, which the `tamper` job makes
+#         impossible to miss (diff-oracles prints a loud line). The `tamper`
+#         signal is advisory-loud, not a blocking gate: a *legitimate* oracle
+#         change should still be mergeable after a human reviews it, so do not
+#         mark `tamper` as a required-green check — it exists to be seen.
+#
+# Without those settings these jobs are advisory and an author can merge past
+# them. Prevention lives off-machine, and the off-machine locus only binds when
+# the org turns it on. CI detects and signals; branch protection is what binds.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Actions are pinned to full commit SHAs. The SHA guarantees the action's bytes
+# cannot change under us; the trailing `# v4` records which human-readable version
+# it was at pin time. That is the Reproducibility substrate applied to CI — the
+# same principle as the oracle hash, one layer out: pin the content, label the name.
+jobs:
+  # Tier 1 — the build gate. Every push and PR, any branch.
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go vet ./...
+      - run: go test ./...
+      - run: go build -o ratchet ./cmd/ratchet
+      - name: self-host — ratchet checks ratchet
+        run: ./ratchet check
+      - name: verify the verifier
+        # On this repo doctor reports both oracles UNCALIBRATED and exits 0 — the
+        # honest day-0 state. If probes are added for ratchet, it calibrates.
+        # Either way it runs, in CI, on the repo that ships it.
+        run: ./ratchet doctor
+
+  # Tier 2 — the tamper gate. PR only: a bare push has no base to diff against.
+  tamper:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0 # need the base commit present locally for `git show`
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go build -o ratchet ./cmd/ratchet
+      - name: diff-oracles against the PR base
+        # Surfaces any oracle weakening as a loud line in the checks tab. Exit 1
+        # means a change or removal a human must ratify (ADR-0008). Whether that
+        # blocks the merge is branch protection's call — see the honesty note.
+        run: ./ratchet diff-oracles "${{ github.event.pull_request.base.sha }}"
