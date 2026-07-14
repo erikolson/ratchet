@@ -17,6 +17,7 @@ import (
 	"github.com/erikolson/ratchet/internal/gitx"
 	"github.com/erikolson/ratchet/internal/hooks"
 	"github.com/erikolson/ratchet/internal/oracles"
+	"github.com/erikolson/ratchet/internal/scaffold"
 	"github.com/spf13/cobra"
 )
 
@@ -49,6 +50,7 @@ func newRootCmd() *cobra.Command {
 		SilenceErrors: true,
 	}
 	root.AddCommand(
+		newInitCmd(),
 		newCheckCmd(),
 		newDoctorCmd(),
 		newGateCmd(),
@@ -57,6 +59,26 @@ func newRootCmd() *cobra.Command {
 		newGateHookCmd(),
 	)
 	return root
+}
+
+func newInitCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "init",
+		Short: "propose a manifest for a human to ratify (detected commands are commented, inactive)",
+		Long: "Read the repo and propose a ratchet.yaml. init is Generate, not Verify: every " +
+			"detected command is written commented and labeled as a guess, so nothing is " +
+			"enforced until a human uncomments it. Refuses to overwrite an existing manifest.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			root, err := repoRoot()
+			if err != nil {
+				return err
+			}
+			if _, err := scaffold.Run(scaffold.Options{RepoRoot: root, Stdout: cmd.OutOrStdout()}); err != nil {
+				return err
+			}
+			return &exitError{code: 0}
+		},
+	}
 }
 
 // repoRoot resolves the git worktree root of the current directory.

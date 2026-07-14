@@ -33,8 +33,12 @@ topology — and they should. What they *shouldn't* each rebuild is the enforcem
 
 ## Ninety seconds
 
+`ratchet init` reads your repo and proposes this — every detected command
+commented and labeled, so you ratify by uncommenting. Or write it yourself; ten
+lines is the whole cost:
+
 ```yaml
-# ratchet.yaml — the only non-portable file. Ten lines is the whole cost.
+# ratchet.yaml — the only non-portable file.
 version: 0
 capabilities:
   - name: test
@@ -61,6 +65,7 @@ from a *suggestion* to a *guarantee*.
 
 | Command | What it does |
 |---|---|
+| `ratchet init` | Read the repo and propose a `ratchet.yaml` — detected commands commented and labeled as guesses. Generate, not Verify: nothing is active until a human uncomments it. |
 | `ratchet check` | Run every declared capability, emit a normalized verdict per capability, write a receipt. Exit `0` pass / `1` fail / `2` error / `3` couldn't-run. |
 | `ratchet doctor` | **Verify the verifier.** Apply a ratified mutation to the code in a throwaway worktree and confirm the oracle *flips to fail*. An oracle that has never been observed to say no is a rumor. |
 | `ratchet install-hooks` | Install the local gate at both loci — a Claude Code `PreToolUse` hook and a git `pre-commit` hook — both invoking one `gate` primitive. |
@@ -126,17 +131,16 @@ repo built to close the gap it demonstrates.
 ## Scope
 
 **v0 ships the enforcement axis:** does violating this fail the build? Built,
-test-first: `check`, `doctor`, `install-hooks` + block-on-red, `diff-oracles`,
-self-hosting.
+test-first: `init`, `check`, `doctor`, `install-hooks` + block-on-red,
+`diff-oracles`, self-hosting.
 
 **Deferred** (named, not forgotten): the evidence axis (witnesses, freeze/thaw,
-the ossification log); structured verdict adapters (`json/pytest`); the
-Reproducibility substrate (the oracle hash captures the *command*, not the
-*environment* it runs in — a weakening through a config file or a pinned dependency
-is the next layer down); and `ratchet init`, the proposer that reads a repo and
-proposes a manifest for a human to ratify.
+the ossification log); structured verdict adapters (`json/pytest`); and the
+Reproducibility substrate — the oracle hash captures the *command*, not the
+*environment* it runs in, so a weakening through a config file or a pinned
+dependency is the next layer down.
 
 ## Status
 
-Eleven packages, built test-first. `go test ./...` is green; `ratchet check` on
+Twelve packages, built test-first. `go test ./...` is green; `ratchet check` on
 ratchet is green.
