@@ -49,6 +49,52 @@ func Head(root string) (string, error) {
 	return h, nil
 }
 
+// AddWorktree checks out commit into a fresh temporary worktree (detached) and
+// returns its path. Doctor calibrates in a worktree, never the working tree
+// (ADR-0006).
+func AddWorktree(root, commit string) (string, error) {
+	dir, err := os.MkdirTemp("", "ratchet-wt-*")
+	if err != nil {
+		return "", err
+	}
+	if _, err := run(root, nil, "worktree", "add", "--detach", "--quiet", dir, commit); err != nil {
+		os.RemoveAll(dir)
+		return "", err
+	}
+	return dir, nil
+}
+
+// RemoveWorktree tears down a worktree created by AddWorktree.
+func RemoveWorktree(root, path string) {
+	_, _ = run(root, nil, "worktree", "remove", "--force", path)
+	os.RemoveAll(path)
+}
+
+// PruneWorktrees clears git's administrative records for worktrees whose
+// directories have already been deleted (e.g. by a previous crash).
+func PruneWorktrees(root string) {
+	_, _ = run(root, nil, "worktree", "prune")
+}
+
+// ApplyCheck reports whether patchPath applies cleanly in worktree, without
+// applying it. A failure here means the probe is stale (ADR-0006).
+func ApplyCheck(worktree, patchPath string) error {
+	_, err := run(worktree, nil, "apply", "--check", patchPath)
+	return err
+}
+
+// Apply applies patchPath in worktree.
+func Apply(worktree, patchPath string) error {
+	_, err := run(worktree, nil, "apply", patchPath)
+	return err
+}
+
+// ApplyReverse reverses patchPath in worktree, restoring the clean baseline.
+func ApplyReverse(worktree, patchPath string) error {
+	_, err := run(worktree, nil, "apply", "-R", patchPath)
+	return err
+}
+
 // SubjectTree computes the git tree hash of the code under judgment: the working
 // tree (tracked plus untracked-but-not-ignored files) with exclude paths removed,
 // via a throwaway index so the real index is never touched (ADR-0001). It also

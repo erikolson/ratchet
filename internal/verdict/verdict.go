@@ -41,6 +41,18 @@ type Finding struct {
 	Message string `json:"message,omitempty"`
 }
 
+// ProbeRecord is one probe nested inside a calibration verdict. A calibration
+// verdict is one claim ("this oracle is calibrated") with the probes as its
+// evidence, so the probes are wrapped here and never escape as top-level verdicts
+// (Q2 invariant). MutatedSubject is provenance — the tree that actually ran under
+// the probe — and is never keyed on (identity stays subject=HEAD).
+type ProbeRecord struct {
+	Name           string `json:"name"`
+	Expected       string `json:"expected"` // "pass" | "fail"
+	Observed       Status `json:"observed"`
+	MutatedSubject string `json:"mutated_subject"`
+}
+
 // Verdict is one normalized adjudication.
 type Verdict struct {
 	// Identity components (ADR-0001).
@@ -59,6 +71,10 @@ type Verdict struct {
 	// Execution facts.
 	DurationMs int64     `json:"duration_ms"`
 	Findings   []Finding `json:"findings"`
+
+	// Probes is populated only for calibration verdicts (kind=calibration): the
+	// nested evidence that established the oracle's calibration. Absent for check.
+	Probes []ProbeRecord `json:"probes,omitempty"`
 
 	// Metadata.
 	Timestamp string `json:"timestamp"`
