@@ -19,6 +19,7 @@ silently rewritten.
 | [0006](0006-doctor-calibrates-via-patch-probes.md) | Doctor calibrates the oracle via ratified patch probes | §7.2; closes §10.2 |
 | [0007](0007-fresh-worktree-per-probe.md) | Each probe runs in its own fresh worktree (refines 0006; changes cost) | refines ADR-0006 |
 | [0008](0008-tamper-defense-is-detection-not-prevention.md) | Tamper defense is detection + off-machine locus, not local prevention; `diff-oracles` not a synced file | §7.1; closes §10.1, §10.4 |
+| [0009](0009-init-is-generate-not-verify.md) | `init` is Generate not Verify — ecosystem detection is legitimate in the proposal path; commented, labeled guesses | §11 step 4, §5 |
 
 **Scope note.** ADRs 0001–0007 cover SEED build-order steps 1–3 (manifest schema,
 `check`, `doctor`). ADR-0008 settles the §7.1 tamper-defense posture (detection +
