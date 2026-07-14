@@ -18,9 +18,11 @@ silently rewritten.
 | [0005](0005-one-log-json-persisted-human-rendered.md) | One verdict log in v0; JSON persisted / human rendered; no findings/`--explain` | §6, §7.3, §7.4 |
 | [0006](0006-doctor-calibrates-via-patch-probes.md) | Doctor calibrates the oracle via ratified patch probes | §7.2; closes §10.2 |
 | [0007](0007-fresh-worktree-per-probe.md) | Each probe runs in its own fresh worktree (refines 0006; changes cost) | refines ADR-0006 |
+| [0008](0008-tamper-defense-is-detection-not-prevention.md) | Tamper defense is detection + off-machine locus, not local prevention; `diff-oracles` not a synced file | §7.1; closes §10.1, §10.4 |
 
-**Scope note.** ADRs 0001–0006 cover SEED build-order steps 1–3 (manifest schema,
-`check`, `doctor`). Steps 4–7 (`init`, `install-hooks`, tamper defense,
-self-host) are not yet decided. In particular the §7.1 tamper-defense *mechanism*
-(§10.1 open question) remains unresolved; these ADRs only ensure steps 1–3 do not
-foreclose it.
+**Scope note.** ADRs 0001–0007 cover SEED build-order steps 1–3 (manifest schema,
+`check`, `doctor`). ADR-0008 settles the §7.1 tamper-defense posture (detection +
+off-machine locus) and reshapes the remaining build order: **step 5** is now
+`install-hooks` + the `kind:gate` verdict + `diff-oracles` (the gate and its honest
+tamper coda ship together), and `init` becomes **step 6**. The README is written
+last, from `FIELD_NOTES.md`.
