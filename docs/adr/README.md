@@ -17,6 +17,7 @@ silently rewritten.
 | [0004](0004-manifest-shape-and-strict-validation.md) | Manifest shape + strict validation: a manifest cannot express a vacuous oracle | §6 |
 | [0005](0005-one-log-json-persisted-human-rendered.md) | One verdict log in v0; JSON persisted / human rendered; no findings/`--explain` | §6, §7.3, §7.4 |
 | [0006](0006-doctor-calibrates-via-patch-probes.md) | Doctor calibrates the oracle via ratified patch probes | §7.2; closes §10.2 |
+| [0007](0007-fresh-worktree-per-probe.md) | Each probe runs in its own fresh worktree (refines 0006; changes cost) | refines ADR-0006 |
 
 **Scope note.** ADRs 0001–0006 cover SEED build-order steps 1–3 (manifest schema,
 `check`, `doctor`). Steps 4–7 (`init`, `install-hooks`, tamper defense,
