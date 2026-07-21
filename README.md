@@ -138,9 +138,11 @@ repo built to close the gap it demonstrates.
 ## Design
 
 - **[docs/SEED.md](docs/SEED.md)** — the original design brief.
-- **[docs/adr/](docs/adr/)** — nine decision records. Each amends a section of the
+- **[docs/adr/](docs/adr/)** — eleven decision records. Each amends a section of the
   seed and states *what it said → what we now hold → why*. The seed is left as the
   historical record; ADRs win on conflict.
+- **[docs/design-notes/](docs/design-notes/)** — open explorations not yet decided,
+  kept distinct from ADRs so a problem-in-progress is never mistaken for a choice made.
 
 ## Constraints
 
