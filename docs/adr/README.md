@@ -21,6 +21,7 @@ silently rewritten.
 | [0008](0008-tamper-defense-is-detection-not-prevention.md) | Tamper defense is detection + off-machine locus, not local prevention; `diff-oracles` not a synced file | §7.1; closes §10.1, §10.4 |
 | [0009](0009-init-is-generate-not-verify.md) | `init` is Generate not Verify — ecosystem detection is legitimate in the proposal path; commented, labeled guesses | §11 step 4, §5 |
 | [0010](0010-ratchet-the-edge-loosening-is-witnessed.md) | Push change to the edge, then ratchet the edge's loosening — the ossification log lands narrow: `oracle-ratification` gates `diff-oracles` | §5; completes ADR-0008 |
+| [0011](0011-oracle-pins-declared-repo-artifacts.md) | The oracle pins declared in-tree artifacts (closes the `./verify.sh` gap) — content-addressing extends to ring 2, not the environment | ADR-0001, ADR-0008, ADR-0010 |
 
 **Scope note.** ADRs 0001–0007 cover SEED build-order steps 1–3 (manifest schema,
 `check`, `doctor`). ADR-0008 settles the §7.1 tamper-defense posture (detection +
