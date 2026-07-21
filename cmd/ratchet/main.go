@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"time"
 
 	"github.com/erikolson/ratchet/internal/check"
 	"github.com/erikolson/ratchet/internal/doctor"
@@ -17,6 +18,7 @@ import (
 	"github.com/erikolson/ratchet/internal/gitx"
 	"github.com/erikolson/ratchet/internal/hooks"
 	"github.com/erikolson/ratchet/internal/oracles"
+	"github.com/erikolson/ratchet/internal/ratify"
 	"github.com/erikolson/ratchet/internal/scaffold"
 	"github.com/spf13/cobra"
 )
@@ -55,6 +57,7 @@ func newRootCmd() *cobra.Command {
 		newDoctorCmd(),
 		newGateCmd(),
 		newDiffOraclesCmd(),
+		newRatifyCmd(),
 		newInstallHooksCmd(),
 		newGateHookCmd(),
 	)
@@ -185,6 +188,47 @@ func newDiffOraclesCmd() *cobra.Command {
 			return &exitError{code: rep.ExitCode}
 		},
 	}
+}
+
+func newRatifyCmd() *cobra.Command {
+	var baseRef, requester, ratifier, reason string
+	var reject bool
+	cmd := &cobra.Command{
+		Use:   "ratify <capability>",
+		Short: "record a differently-authored ratification of an oracle change (ADR-0010)",
+		Long: "Adjudicate a weakening that diff-oracles flagged: write a committed, " +
+			"content-addressed ratification to .ratchet/ossification.jsonl so the exact " +
+			"base→new oracle move clears. proposer ≠ ratifier is enforced as data. " +
+			"Locally advisory; the guarantee is CI binding the two acts to distinct git " +
+			"authors on the protected branch (ADR-0008).",
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			root, err := repoRoot()
+			if err != nil {
+				return err
+			}
+			if _, err := ratify.Run(ratify.Options{
+				RepoRoot:   root,
+				Capability: args[0],
+				BaseRef:    baseRef,
+				Requester:  requester,
+				Ratifier:   ratifier,
+				Reject:     reject,
+				Reason:     reason,
+				Now:        time.Now().UTC().Format(time.RFC3339),
+				Stdout:     cmd.OutOrStdout(),
+			}); err != nil {
+				return err
+			}
+			return &exitError{code: 0}
+		},
+	}
+	cmd.Flags().StringVar(&baseRef, "base", "HEAD", "the ratified reference to diff against (the protected branch, e.g. origin/main)")
+	cmd.Flags().StringVar(&requester, "requester", "", "who proposed this change (required; must differ from the ratifier)")
+	cmd.Flags().StringVar(&ratifier, "ratifier", "", "who approves (defaults to git user.email)")
+	cmd.Flags().BoolVar(&reject, "reject", false, "record a rejection (a tooth) instead of an approval")
+	cmd.Flags().StringVar(&reason, "reason", "", "optional free-text rationale")
+	return cmd
 }
 
 func newInstallHooksCmd() *cobra.Command {

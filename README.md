@@ -92,7 +92,8 @@ from a *suggestion* to a *guarantee*.
 | `ratchet check` | Run every declared capability, emit a normalized verdict per capability, write a receipt. Exit `0` pass / `1` fail / `2` error / `3` couldn't-run. |
 | `ratchet doctor` | **Verify the verifier.** Apply a ratified mutation to the code in a throwaway worktree and confirm the oracle *flips to fail*. An oracle that has never been observed to say no is a rumor. |
 | `ratchet install-hooks` | Install the local gate at both loci — a Claude Code `PreToolUse` hook and a git `pre-commit` hook — both invoking one `gate` primitive. |
-| `ratchet diff-oracles <base>` | Report how the manifest's oracle hashes changed vs a base ref. Tightening is silent; **weakening and removal alarm.** |
+| `ratchet diff-oracles <base>` | Report how the manifest's oracle hashes changed vs a base ref. Tightening is silent; **weakening and removal alarm** — unless a matching ratification clears them. |
+| `ratchet ratify <capability>` | Record a differently-authored ratification of a flagged weakening into the committed ossification log. proposer ≠ ratifier as a checkable data property; a rejection is a first-class tooth. |
 
 ## What makes it more than a linter
 
@@ -115,8 +116,12 @@ shippable by a repo-level tool](docs/adr/0008-tamper-defense-is-detection-not-pr
 and pretending otherwise is theater. Prevention requires a locus the agent cannot
 reach — CI, a pre-receive hook, a root-owned sandbox policy — all org-provisioned.
 What ratchet *does* is make tampering **impossible to do invisibly**: every verdict
-carries its oracle hash, and `diff-oracles` on the protected branch turns a subtle
-YAML weakening into an unmissable line a human ratifies. Local hooks give the
+carries its oracle hash, `diff-oracles` on the protected branch turns a subtle YAML
+weakening into an unmissable line, and `ratchet ratify` makes the human's *yes* a
+committed, content-addressed tooth in an append-only ossification log — detection
+becomes adjudication, and the record can never un-learn. proposer ≠ ratifier is a
+checkable property of that data; the final binding to two distinct git authors lives
+off-machine, in CI, for the same reason prevention does. Local hooks give the
 developer fast feedback; only fleet-level enforcement gives the org a guarantee.
 That boundary is the reason this is a platform, not a tool.
 
@@ -153,17 +158,24 @@ repo built to close the gap it demonstrates.
 
 ## Scope
 
-**v0 ships the enforcement axis:** does violating this fail the build? Built,
-test-first: `init`, `check`, `doctor`, `install-hooks` + block-on-red,
-`diff-oracles`, self-hosting.
+**The enforcement axis** — *does violating this fail the build?* Built, test-first:
+`init`, `check`, `doctor`, `install-hooks` + block-on-red, `diff-oracles`,
+self-hosting.
 
-**Deferred** (named, not forgotten): the evidence axis (witnesses, freeze/thaw,
-the ossification log); structured verdict adapters (`json/pytest`); and the
+**The evidence axis, v1** — *what has this commitment earned, and who authorized every
+time it got easier?* Built ([ADR-0010](docs/adr/0010-ratchet-the-edge-loosening-is-witnessed.md)):
+the committed, append-only ossification log; `ratchet ratify`; and the ratification
+gate on `diff-oracles`. proposer ≠ ratifier is a checkable data property.
+
+**Deferred** (named, not forgotten): the rest of the evidence axis (freeze/thaw, the
+enforcement × evidence lifecycle, hardening earned by witness); artifact-content
+pinning ([ADR-0011](docs/adr/0011-oracle-pins-declared-repo-artifacts.md), the
+`./verify.sh` gap); structured verdict adapters (`json/pytest`); and the
 Reproducibility substrate — the oracle hash captures the *command*, not the
 *environment* it runs in, so a weakening through a config file or a pinned
 dependency is the next layer down.
 
 ## Status
 
-Twelve packages, built test-first. `go test ./...` is green; `ratchet check` on
-ratchet is green.
+Fourteen packages, built test-first. `go test ./...` is green; `ratchet check` on
+ratchet is green. The enforcement axis and the evidence axis v1 (ADR-0010) both ship.

@@ -6,6 +6,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/erikolson/ratchet/internal/manifest"
+	"github.com/erikolson/ratchet/internal/ossification"
+	"github.com/erikolson/ratchet/internal/verdict"
 )
 
 func git(t *testing.T, root string, args ...string) {
@@ -106,6 +110,72 @@ capabilities:
 	}
 	if !bytes.Contains(out.Bytes(), []byte("CHANGED")) {
 		t.Fatalf("output should flag the change:\n%s", out)
+	}
+}
+
+// oracleHash returns the oracle hash of capability cap in a manifest string,
+// exactly as diff computes it — so a ratification entry can be content-addressed
+// to match.
+func oracleHash(t *testing.T, manifestYAML, cap string) string {
+	t.Helper()
+	m, err := manifest.Parse([]byte(manifestYAML), "")
+	if err != nil {
+		t.Fatalf("parse manifest: %v", err)
+	}
+	for _, c := range m.Capabilities {
+		if c.Name == cap {
+			return verdict.OracleSpec{Adapter: "exit", Version: m.Version, Argv: c.Argv, Pass: c.Pass, Fail: c.Fail, Timeout: c.Timeout}.Hash()
+		}
+	}
+	t.Fatalf("capability %q not in manifest", cap)
+	return ""
+}
+
+func writeRatification(t *testing.T, root string, e ossification.Entry) {
+	t.Helper()
+	if err := ossification.Append(ossification.Path(root), e); err != nil {
+		t.Fatalf("write ratification: %v", err)
+	}
+}
+
+func TestDiff_WeakenClearedByRatification(t *testing.T) {
+	head := `version: 0
+capabilities:
+  - { name: test, run: "pytest -q --ignore=tests", verdict: exit }
+`
+	root := baseRepo(t, oneCap, head)
+	writeRatification(t, root, ossification.Entry{
+		Capability: "test",
+		BaseOracle: oracleHash(t, oneCap, "test"),
+		NewOracle:  oracleHash(t, head, "test"),
+		Requester:  "agent", Ratifier: "alice", Decision: ossification.Ratified,
+		Timestamp: "2026-07-21T00:00:00Z",
+	})
+	rep, out := diff(t, root)
+	if rep.ExitCode != 0 {
+		t.Fatalf("a ratified weakening must clear (exit 0); got %d\n%s", rep.ExitCode, out)
+	}
+	if !bytes.Contains(out.Bytes(), []byte("RATIFIED")) {
+		t.Fatalf("output should record the ratification:\n%s", out)
+	}
+}
+
+func TestDiff_SelfRatificationStillAlarms(t *testing.T) {
+	head := `version: 0
+capabilities:
+  - { name: test, run: "pytest -q --ignore=tests", verdict: exit }
+`
+	root := baseRepo(t, oneCap, head)
+	writeRatification(t, root, ossification.Entry{
+		Capability: "test",
+		BaseOracle: oracleHash(t, oneCap, "test"),
+		NewOracle:  oracleHash(t, head, "test"),
+		Requester:  "agent", Ratifier: "agent", Decision: ossification.Ratified,
+		Timestamp: "2026-07-21T00:00:00Z",
+	})
+	rep, _ := diff(t, root)
+	if rep.ExitCode == 0 {
+		t.Fatal("a self-ratification (requester == ratifier) must NOT clear the weakening")
 	}
 }
 

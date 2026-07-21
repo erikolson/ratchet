@@ -14,6 +14,7 @@ import (
 
 	"github.com/erikolson/ratchet/internal/gitx"
 	"github.com/erikolson/ratchet/internal/manifest"
+	"github.com/erikolson/ratchet/internal/ossification"
 	"github.com/erikolson/ratchet/internal/verdict"
 )
 
@@ -89,7 +90,17 @@ func Diff(root, baseRef string, w io.Writer) (Report, error) {
 		}
 	}
 
-	rep.ExitCode = renderAndScore(w, baseRef, rep.Changes)
+	// A weakening is adjudicated, not merely detected (ADR-0010): a changed/removed
+	// oracle clears when the committed ossification log carries a matching,
+	// differently-authored ratification. Read from the working tree — the PR under
+	// review carries its own ratification; CI additionally binds it to git
+	// authorship, which the tool cannot (ADR-0008).
+	entries, err := ossification.Load(ossification.Path(root))
+	if err != nil {
+		return Report{ExitCode: 3}, fmt.Errorf("reading ossification log: %w", err)
+	}
+
+	rep.ExitCode = renderAndScore(w, baseRef, rep.Changes, entries)
 	return rep, nil
 }
 
@@ -129,7 +140,7 @@ func short(h string) string {
 	return h
 }
 
-func renderAndScore(w io.Writer, baseRef string, changes []Change) int {
+func renderAndScore(w io.Writer, baseRef string, changes []Change, entries []ossification.Entry) int {
 	if len(changes) == 0 {
 		fmt.Fprintf(w, "✓ no oracle changes since %s.\n", baseRef)
 		return 0
@@ -140,17 +151,27 @@ func renderAndScore(w io.Writer, baseRef string, changes []Change) int {
 		case Added:
 			fmt.Fprintf(w, "＋ oracle added: %s  (%s)  — tightening, no review needed.\n", c.Capability, c.NewRun)
 		case Changed:
+			if e, ok := ossification.Ratifies(entries, c.Capability, c.BaseOracle, c.NewOracle); ok {
+				fmt.Fprintf(w, "✓ oracle changed: %s  (%s → %s) — RATIFIED by %s (requested by %s).\n",
+					c.Capability, c.BaseRun, c.NewRun, e.Ratifier, e.Requester)
+				continue
+			}
 			needsReview = true
-			fmt.Fprintf(w, "⚠ ORACLE CHANGED: %s\n    ratified: %-32s (oracle:%s)\n    proposed: %-32s (oracle:%s)\n  This changes what \"verified\" means. Requires review.\n",
-				c.Capability, c.BaseRun, short(c.BaseOracle), c.NewRun, short(c.NewOracle))
+			fmt.Fprintf(w, "⚠ ORACLE CHANGED: %s\n    ratified: %-32s (oracle:%s)\n    proposed: %-32s (oracle:%s)\n  This changes what \"verified\" means. Requires a ratification (ratchet ratify %s).\n",
+				c.Capability, c.BaseRun, short(c.BaseOracle), c.NewRun, short(c.NewOracle), c.Capability)
 		case Removed:
+			if e, ok := ossification.Ratifies(entries, c.Capability, c.BaseOracle, ""); ok {
+				fmt.Fprintf(w, "✓ oracle removed: %s  (%s) — RATIFIED by %s (requested by %s).\n",
+					c.Capability, c.BaseRun, e.Ratifier, e.Requester)
+				continue
+			}
 			needsReview = true
-			fmt.Fprintf(w, "✗ ORACLE REMOVED: %s\n    was: %-32s (oracle:%s)\n  A removed capability stops verifying something. Requires review.\n",
-				c.Capability, c.BaseRun, short(c.BaseOracle))
+			fmt.Fprintf(w, "✗ ORACLE REMOVED: %s\n    was: %-32s (oracle:%s)\n  A removed capability stops verifying something. Requires a ratification (ratchet ratify %s).\n",
+				c.Capability, c.BaseRun, short(c.BaseOracle), c.Capability)
 		}
 	}
 	if needsReview {
 		return 1
 	}
-	return 0 // additions only — tightening is silent
+	return 0 // additions only, or everything ratified — tightening is silent
 }

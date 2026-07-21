@@ -32,6 +32,7 @@ last, from `FIELD_NOTES.md`.
 
 ADR-0010 opens **act two** with its narrowest slice: the committed ossification log
 and an `oracle-ratification` entry that turns ADR-0008's `diff-oracles` detection
-into adjudication (proposer ≠ ratifier as a checkable property of the data). It is
-Accepted but not yet built; the freeze/thaw lifecycle and evidence-earned hardening
-stay deferred.
+into adjudication (proposer ≠ ratifier as a checkable property of the data). **Built
+2026-07-21** as evidence axis v1 — the committed ossification log, `ratchet ratify`,
+and the `diff-oracles` ratification gate ship; the freeze/thaw lifecycle,
+evidence-earned hardening, and artifact-content pinning (ADR-0011) stay deferred.

@@ -1,6 +1,6 @@
 # ADR-0010 — Ratchet the edge: loosening is witnessed
 
-- **Status:** Accepted (proposed by the assistant, ratified by the human — proposer ≠ ratifier, applied to its own adoption)
+- **Status:** Accepted · **Built** 2026-07-21 (evidence axis v1) — proposed by the assistant, ratified by the human, proposer ≠ ratifier applied to its own adoption
 - **Date:** 2026-07-21
 - **Amends:** SEED §5 (the evidence axis lands narrow, not as the full lifecycle); relates ADR-0008 (completes its detection story into adjudication), ADR-0005 (the ossification log now exists), ADR-0001 (verdict identity is the material this folds over)
 - **Origin:** the "push change to the edge" grill
@@ -131,8 +131,13 @@ about the command.
 
 - A new committed file `.ratchet/ossification.jsonl`; `init` writes the
   `.ratchet/.gitignore` so it is tracked while `verdicts.jsonl` stays ignored.
-- A new command `ratchet ratify` writes an `oracle-ratification` entry (request →
-  verdict as two authored acts, per SEED §5); a rejection is a first-class outcome.
+- A new command `ratchet ratify` writes an `oracle-ratification` entry; a rejection
+  is a first-class outcome. **v1 shape:** a *single* entry names both `requester` and
+  `ratifier`, so proposer ≠ ratifier is a checkable data property; `ratify` refuses to
+  write a self-ratified *approval*. SEED §5's two-separately-authored-acts (two git
+  commits by two authors) is the off-machine strengthening layered on top in CI, not
+  something the local single-entry write can bind — consistent with the locus split
+  above.
 - `diff-oracles` gains a ratification check: `changed`/`removed` clears only against
   a matching, differently-authored `ratified` entry; `added` stays silent. Wired as
   a required CI check on the protected branch is where it becomes a guarantee.

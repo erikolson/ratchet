@@ -86,7 +86,7 @@ func Run(opts Options) (Result, error) {
 	}
 	gi := filepath.Join(ratchetDir, ".gitignore")
 	if _, err := os.Stat(gi); err != nil {
-		if err := os.WriteFile(gi, []byte("# the verdict stream is local exhaust, not committed substrate (ADR-0005)\nverdicts.jsonl\n"), 0o644); err != nil {
+		if err := os.WriteFile(gi, []byte("# The verdict stream is local exhaust, not committed substrate (ADR-0005).\n# Only verdicts.jsonl is ignored: ossification.jsonl and probes/ ARE committed teeth.\nverdicts.jsonl\n"), 0o644); err != nil {
 			return res, err
 		}
 	}

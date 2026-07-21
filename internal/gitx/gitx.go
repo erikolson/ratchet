@@ -63,6 +63,17 @@ func Head(root string) (string, error) {
 	return h, nil
 }
 
+// UserEmail returns the configured git identity (user.email), or "" if unset. It
+// is the default ratifier for `ratchet ratify` — advisory locally, since a local
+// actor controls it (ADR-0008); the binding check on it is off-machine.
+func UserEmail(root string) string {
+	email, err := run(root, nil, "config", "user.email")
+	if err != nil {
+		return ""
+	}
+	return email
+}
+
 // AddWorktree checks out commit into a fresh temporary worktree (detached) and
 // returns its path. Doctor calibrates in a worktree, never the working tree
 // (ADR-0006).
