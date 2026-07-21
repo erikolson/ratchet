@@ -179,3 +179,7 @@ dependency is the next layer down.
 
 Fourteen packages, built test-first. `go test ./...` is green; `ratchet check` on
 ratchet is green. The enforcement axis and the evidence axis v1 (ADR-0010) both ship.
+
+## License
+
+[MIT](LICENSE) © 2026 Erik Olson.
