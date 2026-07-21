@@ -33,6 +33,27 @@ topology — and they should. What they *shouldn't* each rebuild is the enforcem
 > Declare what "verified" means here, in ten lines of YAML. The enforcement is
 > derived from it. One binary, N repos, one audit trail.
 
+### What's injected, what's fixed
+
+The physics of good software pushes change to the edge. ratchet obeys it. Two
+things vary per repo, and both live at the edge, injected:
+
+- **the spec** — `ratchet.yaml`: *what* to check and the pass/fail threshold; and
+- **the verifier** — the `run:` command, or a repo-local script it points at: *how*
+  it is tested.
+
+What lives *inside* the binary is a single, fixed converter: run the command, read
+its exit code, normalize to a verdict. It is language-indifferent and **does not
+grow per repo** — a thousand projects in a thousand languages reuse the same handful
+of lines. ratchet never learns your ecosystem; you inject it. That is why one binary
+governs a whole fleet.
+
+The catch the rest of this tool exists for: the edge is also exactly where the
+incentive to cheat lives. So ratchet pushes change to the edge, then **puts a ratchet
+on the edge's loosening** — tightening is free and silent; weakening leaves a trace
+and, on the protected branch, wants a differently-authored yes. See
+[ADR-0010](docs/adr/0010-ratchet-the-edge-loosening-is-witnessed.md).
+
 ## Ninety seconds
 
 `ratchet init` reads your repo and proposes this — every detected command

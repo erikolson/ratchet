@@ -20,6 +20,7 @@ silently rewritten.
 | [0007](0007-fresh-worktree-per-probe.md) | Each probe runs in its own fresh worktree (refines 0006; changes cost) | refines ADR-0006 |
 | [0008](0008-tamper-defense-is-detection-not-prevention.md) | Tamper defense is detection + off-machine locus, not local prevention; `diff-oracles` not a synced file | §7.1; closes §10.1, §10.4 |
 | [0009](0009-init-is-generate-not-verify.md) | `init` is Generate not Verify — ecosystem detection is legitimate in the proposal path; commented, labeled guesses | §11 step 4, §5 |
+| [0010](0010-ratchet-the-edge-loosening-is-witnessed.md) | Push change to the edge, then ratchet the edge's loosening — the ossification log lands narrow: `oracle-ratification` gates `diff-oracles` | §5; completes ADR-0008 |
 
 **Scope note.** ADRs 0001–0007 cover SEED build-order steps 1–3 (manifest schema,
 `check`, `doctor`). ADR-0008 settles the §7.1 tamper-defense posture (detection +
@@ -27,3 +28,9 @@ off-machine locus) and reshapes the remaining build order: **step 5** is now
 `install-hooks` + the `kind:gate` verdict + `diff-oracles` (the gate and its honest
 tamper coda ship together), and `init` becomes **step 6**. The README is written
 last, from `FIELD_NOTES.md`.
+
+ADR-0010 opens **act two** with its narrowest slice: the committed ossification log
+and an `oracle-ratification` entry that turns ADR-0008's `diff-oracles` detection
+into adjudication (proposer ≠ ratifier as a checkable property of the data). It is
+Accepted but not yet built; the freeze/thaw lifecycle and evidence-earned hardening
+stay deferred.
