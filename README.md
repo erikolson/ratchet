@@ -1,6 +1,8 @@
 # ratchet
 
 [![CI](https://github.com/erikolson/ratchet/actions/workflows/ci.yml/badge.svg)](https://github.com/erikolson/ratchet/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/erikolson/ratchet)](https://github.com/erikolson/ratchet/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Certainty in change.** A single Go binary that makes "verified" a *fact* rather
 than a *claim* — in any repo, in any language.
