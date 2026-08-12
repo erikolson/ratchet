@@ -14,4 +14,5 @@ The distinction from the neighbours:
 
 | Note | Topic |
 |---|---|
+| [boundary-scoped-enforcement](boundary-scoped-enforcement.md) | Enforcement belongs at boundaries; current ratchet is repo/git-scoped, and broader boundary levels would need explicit subject identity, receipt storage, manifest discovery, and gate adapters |
 | [oracle-change-direction](oracle-change-direction.md) | Telling a *tightening* from a *weakening* when an oracle is modified — why v1 refuses to, and what earning the right to infer it would take |
